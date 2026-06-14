@@ -1,9 +1,6 @@
 import NextAuth from "next-auth";
 import Google from "next-auth/providers/google";
 
-console.log("[Auth] NEXTAUTH_URL:", process.env.NEXTAUTH_URL);
-console.log("[Auth] GOOGLE_CLIENT_ID:", process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET");
-
 export const {
   handlers,
   auth,
@@ -11,6 +8,17 @@ export const {
   signOut,
 } = NextAuth({
   debug: true,
+  logger: {
+    error(code, ...message) {
+      console.error("[NextAuth Error]", code, ...message);
+    },
+    warn(code, ...message) {
+      console.warn("[NextAuth Warn]", code, ...message);
+    },
+    debug(code, ...message) {
+      console.log("[NextAuth Debug]", code, ...message);
+    },
+  },
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID!,
