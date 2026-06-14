@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
-import { tasks, activity, comments } from "@/lib/db/schema";
-import { eq, and, desc, sql, SQL } from "drizzle-orm";
+import { tasks, activity, comments, columns } from "@/lib/db/schema";
+import { eq, and, desc, asc, sql, SQL } from "drizzle-orm";
 import type { CreateTaskInput, UpdateTaskInput, MoveTaskInput, Task } from "@/types/task";
 
 export class TaskService {
@@ -58,6 +58,22 @@ export class TaskService {
     input: CreateTaskInput,
     actor: { id: string; type: "user" | "agent"; orgId: string }
   ) {
+    // Resolve columnId — use first column of board if not specified
+    let columnId = input.columnId;
+    if (!columnId) {
+      const [firstCol] = await db
+        .select({ id: columns.id })
+        .from(columns)
+        .where(eq(columns.boardId, input.boardId))
+        .orderBy(asc(columns.position))
+        .limit(1);
+      columnId = firstCol?.id;
+    }
+
+    if (!columnId) {
+      throw new Error("Board has no columns. Create columns first.");
+    }
+
     // Get next position in column
     const [maxPos] = await db
       .select({ max: sql<number>`coalesce(max(${tasks.position}), 0)` })
@@ -65,7 +81,7 @@ export class TaskService {
       .where(
         and(
           eq(tasks.boardId, input.boardId),
-          input.columnId ? eq(tasks.columnId, input.columnId) : sql`true`
+          eq(tasks.columnId, columnId)
         )
       );
 
@@ -74,7 +90,7 @@ export class TaskService {
       .values({
         orgId: actor.orgId,
         boardId: input.boardId,
-        columnId: input.columnId || input.boardId, // fallback
+        columnId,
         title: input.title,
         description: input.description,
         status: input.status || "backlog",

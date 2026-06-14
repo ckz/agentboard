@@ -48,9 +48,12 @@ export async function POST(request: NextRequest) {
 
     const task = await TaskService.create(body, actor);
     return NextResponse.json({ data: task }, { status: 201 });
-  } catch (error) {
+  } catch (error: any) {
     console.error("POST /api/v1/tasks error:", error);
-    return internalError();
+    return NextResponse.json(
+      { error: { code: "INTERNAL_ERROR", message: error.message || "Internal server error" } },
+      { status: 500 }
+    );
   }
 }
 
