@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
-import { boards, columns, tasks, users } from "@/lib/db/schema";
+import { boards, columns, tasks } from "@/lib/db/schema";
 import { eq, and, asc } from "drizzle-orm";
 import { redirect, notFound } from "next/navigation";
 import { KanbanBoard } from "@/components/board/kanban-board";
@@ -13,20 +13,15 @@ export default async function BoardPage({
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
+  const orgId = (session.user as any).orgId;
+  if (!orgId) redirect("/boards");
+
   const { id } = await params;
-
-  const [user] = await db
-    .select({ orgId: users.orgId })
-    .from(users)
-    .where(eq(users.id, (session.user as any).id))
-    .limit(1);
-
-  if (!user?.orgId) redirect("/boards");
 
   const [board] = await db
     .select()
     .from(boards)
-    .where(and(eq(boards.id, id), eq(boards.orgId, user.orgId)))
+    .where(and(eq(boards.id, id), eq(boards.orgId, orgId)))
     .limit(1);
 
   if (!board) notFound();

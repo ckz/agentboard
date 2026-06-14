@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth/config";
 import { db } from "@/lib/db";
-import { tasks, users } from "@/lib/db/schema";
+import { tasks } from "@/lib/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -17,18 +17,13 @@ export default async function TasksPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/login");
 
-  const [user] = await db
-    .select({ orgId: users.orgId })
-    .from(users)
-    .where(eq(users.id, (session.user as any).id))
-    .limit(1);
-
-  if (!user?.orgId) redirect("/boards");
+  const orgId = (session.user as any).orgId;
+  if (!orgId) redirect("/boards");
 
   const allTasks = await db
     .select()
     .from(tasks)
-    .where(eq(tasks.orgId, user.orgId))
+    .where(eq(tasks.orgId, orgId))
     .orderBy(desc(tasks.createdAt));
 
   return (
