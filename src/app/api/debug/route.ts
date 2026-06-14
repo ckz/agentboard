@@ -3,8 +3,9 @@ import { NextResponse } from "next/server";
 export async function GET() {
   return NextResponse.json({
     NEXTAUTH_URL: process.env.NEXTAUTH_URL || "NOT SET",
-    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ? "SET" : "NOT SET",
-    GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ? "SET" : "NOT SET",
-    DATABASE_URL: process.env.DATABASE_URL ? "SET" : "NOT SET",
+    GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "NOT SET",
+    GOOGLE_CLIENT_ID_SET: !!process.env.GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET_SET: !!process.env.GOOGLE_CLIENT_SECRET,
+    DATABASE_URL_SET: !!process.env.DATABASE_URL,
   });
 }
